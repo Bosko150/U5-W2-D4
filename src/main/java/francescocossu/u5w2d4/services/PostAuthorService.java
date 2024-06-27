@@ -1,5 +1,7 @@
 package francescocossu.u5w2d4.services;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import francescocossu.u5w2d4.entities.PostAuthor;
 import francescocossu.u5w2d4.exceptions.NotFoundException;
 import francescocossu.u5w2d4.payloads.AuthorDTO;
@@ -10,7 +12,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.UUID;
 
 @Service
@@ -18,6 +22,8 @@ public class PostAuthorService {
 
     @Autowired
     private PostAuthorRepository postAuthorRepository;
+    @Autowired
+    private Cloudinary cloudinaryService;
 
     public PostAuthor saveAuthor(AuthorDTO authorBody) {
 
@@ -52,5 +58,13 @@ public class PostAuthorService {
     public void deleteAuthorById(UUID id) {
 
         postAuthorRepository.deleteById(id);
+    }
+
+    public String uploadCover(MultipartFile file, UUID id) throws IOException {
+        String cloudinaryUrl = cloudinaryService.uploader().upload(file.getBytes(), ObjectUtils.emptyMap()).get("url").toString();
+        PostAuthor found = this.findAuthorById(id);
+        found.setAvatar(cloudinaryUrl);
+        this.postAuthorRepository.save(found);
+        return cloudinaryUrl;
     }
 }

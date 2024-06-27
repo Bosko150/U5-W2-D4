@@ -1,12 +1,16 @@
 package francescocossu.u5w2d4.services;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import francescocossu.u5w2d4.entities.BlogPost;
 import francescocossu.u5w2d4.exceptions.NotFoundException;
 import francescocossu.u5w2d4.payloads.BlogPostDTO;
 import francescocossu.u5w2d4.repositories.BlogPostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,6 +22,8 @@ public class BlogPostService {
     private BlogPostRepository blogPostRepository;
     @Autowired
     private PostAuthorService postAuthorService;
+    @Autowired
+    private Cloudinary cloudinaryService;
 
     public BlogPost saveBlogPost(BlogPostDTO blogPost) {
 
@@ -51,6 +57,14 @@ public class BlogPostService {
     public void deleteBlogPostById(UUID id) {
 
         blogPostRepository.deleteById(id);
+    }
+
+    public String uploadCover(MultipartFile file, UUID id) throws IOException {
+        String cloudinaryUrl = cloudinaryService.uploader().upload(file.getBytes(), ObjectUtils.emptyMap()).get("url").toString();
+        BlogPost found = this.findBlogPostById(id);
+        found.setCover(cloudinaryUrl);
+        this.blogPostRepository.save(found);
+        return cloudinaryUrl;
     }
 
 
